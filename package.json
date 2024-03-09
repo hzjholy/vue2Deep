@@ -1,0 +1,18 @@
+{
+  "name": "vue2deep",
+  "version": "1.0.0",
+  "description": "1.使用rollup搭建开发环境",
+  "main": "index.js",
+  "scripts": {
+    "dev": "rollup -cw"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@babel/core": "^7.24.0",
+    "@babel/preset-env": "^7.24.0",
+    "rollup": "^4.12.1",
+    "rollup-plugin-babel": "^4.4.0"
+  }
+}
