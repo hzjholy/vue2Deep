@@ -9,18 +9,32 @@
   <body>
     <script src="./vue.js"></script>
     <script>
-      console.log("Vue", Vue);
       // 响应式数据变化，监控数据变化
       // 数据的取值以及更改值,需要监控到
+      //   class A {
+      //     constructor(a, b) {
+      //       this.a = 1;
+      //       this.b = 2;
+      //     }
+      //   }
+
       const vm = new Vue({
         data() {
           // 代理数据
+          // return new A();
           return {
             name: "hzj",
             age: 20,
+            address: {
+              num: 30,
+              content: "hzj content",
+            },
           };
         },
       });
+      vm.name = "123"; // 修改触发set
+      console.log(vm); // 取值触发get vm.xxx -> vm._data.xxx
+      console.log("vm", vm);
     </script>
   </body>
 </html>
