@@ -10,6 +10,17 @@
     <script src="./vue.js"></script>
     <script>
       console.log("Vue", Vue);
+      // 响应式数据变化，监控数据变化
+      // 数据的取值以及更改值,需要监控到
+      const vm = new Vue({
+        data() {
+          // 代理数据
+          return {
+            name: "hzj",
+            age: 20,
+          };
+        },
+      });
     </script>
   </body>
 </html>
