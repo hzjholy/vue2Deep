@@ -4,6 +4,13 @@
   (global = typeof globalThis !== 'undefined' ? globalThis : global || self, global.Vue = factory());
 })(this, (function () { 'use strict';
 
+  // 对模板进行编译
+  function compileToFunction(template) {
+    console.log("template", template);
+    // 1.将template转化ast语法树
+    // 2.生成render方法(render方法执行后的返回结果就是虚拟DOM)
+  }
+
   function _toPrimitive(t, r) {
     if ("object" != typeof t || !t) return t;
     var e = t[Symbol.toPrimitive];
@@ -223,6 +230,38 @@
       // 初始化状态
       initState(vm);
       // todo...
+      if (options.el) {
+        vm.$mount(options.el); // 实现数据的挂载
+      }
+      Vue.prototype.$mount = function (el) {
+        var vm = this;
+        el = document.querySelector(el);
+        var ops = vm.$options;
+        if (!ops.render) {
+          // 先进行查找是否有render函数
+          var template; // 没有render，是否有写template。没写template就用外部的template
+          if (!ops.template && el) {
+            // 没有写模板，但是写了el
+            template = el.outerHTML;
+          } else {
+            if (el) {
+              template = ops.template; // 如果有el则采用模板的内容
+            }
+          }
+          // 写了template就用写了的template
+          console.log("template", template);
+          if (template) {
+            // 有了模板进行模板编译
+            var render = compileToFunction(template);
+            ops.render = render; // jsx 最终会被编译成h('xxx')
+          }
+        }
+        // ops.render; // 最终就可以获取render方法
+      };
+
+      // script 标签引用的vue.global.js 这个编译过程是在浏览器运行的
+      // runtime【运行时】不包含模板编译的，整个编译打包的时候通过loader来转义.vue文件
+      // 用runtime的时候，不能使用template
     };
   }
 

@@ -11,3 +11,6 @@
  Object.defineProperty【es5】不支持低版本
 
  proxy是es6的  也没有替代方案
+
+
+cnpm i @rollup/plugin-node-resolve

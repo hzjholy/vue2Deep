@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <div id="app">
+      <div>{{name}}</div>
+      <span>{{age}}</span>
+    </div>
+    <script src="./vue.js"></script>
+    <script>
+      // 响应式数据变化，监控数据变化
+      // 数据的取值以及更改值,需要监控到
+      //   class A {
+      //     constructor(a, b) {
+      //       this.a = 1;
+      //       this.b = 2;
+      //     }
+      //   }
+
+      const vm = new Vue({
+        template: "<div>123</div>",
+        // el: "#app", // 将数据解析到el元素上
+        data() {
+          // 代理数据
+          // return new A();
+          return {
+            name: "hzj",
+            age: 20,
+            address: {
+              num: 30,
+              content: "hzj content",
+            },
+            like: [
+              "eat",
+              "drink",
+              {
+                a: 123,
+              },
+            ],
+          };
+        },
+      });
+      vm.$mount("#app");
+      console.log("vm", vm);
+      // 1.模板引擎 性能差 需要正则匹配替换  vue1.0的时候，没有引入虚拟DOM改变
+      // 2.采用虚拟DOM  数据变化后比较虚拟DOM的差异，最后更新需要更新的地方
+      // 3.核心就是将模板变为我们的js语法规范，通过js语法生成虚拟DOM
+
+      // 语法之间的转换 es6 -> es5
+      // css压缩  需要先变成语法树、再重新组装代码成为新的语法
+      // 将template转换成render语法
+    </script>
+  </body>
+</html>
