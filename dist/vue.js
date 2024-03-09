@@ -50,11 +50,69 @@
     return Constructor;
   }
 
+  // 重写数组的部分方法
+
+  var oldArrayProto = Array.prototype; // 获取数组的原型
+
+  // newArrayProto.__proto__ = oldArrayProto
+  var newArrayProto = Object.create(oldArrayProto);
+  var methods = [
+  // 找到所有的变异方法【修改原数组】
+  "push", "pop", "shift", "unshift", "reverse", "sort", "splice"];
+  // concat slice 都不会改变原数组
+  methods.forEach(function (method) {
+    // arr.push(123)
+    newArrayProto[method] = function () {
+      var _oldArrayProto$method;
+      for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
+        args[_key] = arguments[_key];
+      }
+      // 这里重写了数组的方法
+      // push.call(arrnewArrayProto) todo...
+      var result = (_oldArrayProto$method = oldArrayProto[method]).call.apply(_oldArrayProto$method, [this].concat(args)); // 内部调用原来的方法，函数的劫持， 切片编程
+      // 需要对新增的数据 再次进行劫持
+      var inserted;
+      var ob = this.__ob__;
+      switch (method) {
+        case "push":
+        case "unshift":
+          // arr.push(1,2,3)
+          inserted = args;
+          break;
+        case "splice":
+          // arr.splice(0,1,{a:1}) 找到第0个删除第一个，新增一个对象
+          inserted = args.slice(2);
+      }
+      console.log("新增的内容inserted", inserted);
+      if (inserted) {
+        // 对新增的内容再次观测
+        ob.observeArray(inserted);
+      }
+      return result;
+    };
+  });
+
   var Observe = /*#__PURE__*/function () {
     function Observe(data) {
       _classCallCheck(this, Observe);
+      Object.defineProperty(data, "__ob__", {
+        value: this,
+        enumerable: false
+      });
+      // Object.defineProperty(data, "__ob__", {
+      //   value: this,
+      //   enumerable: false, // 将__ob__变成不可枚举（循环的时候无法获取到）
+      // });
       // Object.defineProperty 只能劫持已经存在的属性，新增或者删除并不知道【vue2里面会为此单独写api $set $delete】
-      this.walk(data); // 遍历对象劫持
+      // data.__ob__ = this; // 给数据加了一个标识，如果数据上有__ob__，则说明这个属性被观测过
+      if (Array.isArray(data)) {
+        // 重写数组中的方法 7个变异方法，是可以修改数组本身
+
+        data.__proto__ = newArrayProto; // 保留数组原有的特性，并且可以重写部分方法
+        this.observeArray(data); // 如果数组中存在对象，可以监控到对象的变化
+      } else {
+        this.walk(data); // 遍历对象劫持
+      }
     }
     /**
      * 循环对象 对属性依次劫持
@@ -66,6 +124,14 @@
         // "重新定义"属性 【注意：性能差】
         Object.keys(data).forEach(function (key) {
           return defineReactive(data, key, data[key]);
+        });
+      }
+    }, {
+      key: "observeArray",
+      value: function observeArray(data) {
+        // 观测数组
+        data.forEach(function (item) {
+          return observe(item);
         });
       }
     }]);
@@ -84,14 +150,15 @@
     // 最后一个参数是闭包，value并不会销毁
     Object.defineProperty(target, key, {
       get: function get() {
-        console.log("用户取值了");
+        console.log("用户取值了", key);
         // 取值的时候，会执行get
         return value;
       },
       set: function set(newValue) {
-        console.log("用户设置值了");
+        console.log("用户设置值了", key);
         // 修改的时候，会执行set
         if (newValue === value) return;
+        observe(newValue);
         value = newValue;
       }
     });
@@ -103,7 +170,10 @@
     }
     // 如果一个对象被劫持过了，那就不需要再被劫持
     // 【要判断对象是否被劫持过,可以增添一个实例，用实例判断是否被劫持】
-
+    // 说明这个对象被代理过
+    if (data.__ob__ instanceof Observe) {
+      return data.__ob__;
+    }
     return new Observe(data);
   }
 

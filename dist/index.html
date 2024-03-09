@@ -29,10 +29,29 @@
               num: 30,
               content: "hzj content",
             },
+            like: [
+              "eat",
+              "drink",
+              {
+                a: 123,
+              },
+            ],
           };
         },
       });
-      vm.name = "123"; // 修改触发set
+      //   vm.name = "123"; // 修改触发set
+      //   vm.address = {
+      //     num: 20,
+      //   };
+
+      // 修改数组，很少用索引来操作数组，因为[9999]来写代码，但是内部做劫持会浪费性能
+      // 用户一般修改数组 都是通过方法来修改 push shift ......
+      vm.like.unshift({
+        bb: "123",
+      });
+      //   vm.like[2].a;
+      //   vm.like[2].a = 2100; // 也要劫持更新
+
       console.log(vm); // 取值触发get vm.xxx -> vm._data.xxx
       console.log("vm", vm);
     </script>
