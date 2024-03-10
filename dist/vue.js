@@ -4,10 +4,149 @@
   (global = typeof globalThis !== 'undefined' ? globalThis : global || self, global.Vue = factory());
 })(this, (function () { 'use strict';
 
+  var ncname = "[a-zA-Z_][\\-\\.0-9_a-zA-Z]*";
+  var qnameCapture = "((?:".concat(ncname, "\\:)?").concat(ncname, ")"); // :标签说明可能存在命名空间
+  var startTagOpen = new RegExp("^<".concat(qnameCapture)); // 匹配到的分组是一个 标签名  <xxx 匹配到的是开始标签的名字
+  var endTag = new RegExp("^<\\/".concat(qnameCapture, "[^>]*>")); // 匹配的是</xxxx>  最终匹配到的分组就是结束标签的名字
+  var attribute = /^\s*([^\s"'<>\/=]+)(?:\s*(=)\s*(?:"([^"]*)"+|'([^']*)'+|([^\s"'=<>`]+)))?/; // 匹配属性
+  // 第一个分组就是属性的key value 就是 分组3/分组4/分组五
+  var startTagClose = /^\s*(\/?)>/; // <div> <br/>
+
+  // vue3 采用的不是使用正则
   // 对模板进行编译
+
+  /**
+   *{
+      tag: 'div',
+      type: 1,
+      attrs: [{name,age}],
+      parent:null,
+      children:[{
+          tag: 'div',
+          type: 1,
+          attrs: [{name,age}],
+          parent:null,
+          children:[{
+              
+          }]
+      }]
+  }
+   * @param {*} html
+   * 每解析一个删除一个
+   */
+
+  function parseHTML(html) {
+    var ELEMENT_TYPE = 1;
+    var TEXT_TYPE = 3;
+    var stack = []; // 用于存放元素
+    var currentParent; // 指针，永远指向栈中的最后一个
+    var root;
+
+    // 最终需要转化成一颗抽象的语法树
+    function createASTElement(tag, attrs) {
+      return {
+        tag: tag,
+        type: ELEMENT_TYPE,
+        children: [],
+        attrs: attrs,
+        parent: null
+      };
+    }
+    //  div span
+    function start(tag, attrs) {
+      console.log(tag, attrs, "开始");
+      var node = createASTElement(tag, attrs); // 创造一个ast节点
+      if (!root) {
+        // 是否为空树
+        root = node; // 如果为空，则为树的根节点
+      }
+      if (currentParent) {
+        node.parent = currentParent; // 只赋值了father
+        currentParent.children.push(node); // 还需将father的children赋值给自己
+      }
+      stack.push(node);
+      currentParent = node; // currentParent为栈中的最后一个
+    }
+    /**
+     * 文本直接放到当前指向的节点
+     * @param {*} text
+     */
+    function chars(text) {
+      console.log(text, "文本");
+      text = text.replace(/\s/g, ""); // 如果空格超过2就删除两个以上
+      text && currentParent.children.push({
+        type: TEXT_TYPE,
+        text: text,
+        parent: currentParent
+      });
+    }
+    function end(tag) {
+      console.log(tag, "结束");
+      stack.pop(); // 弹出最后一个,校验标签是否合法
+      currentParent = stack[stack.length - 1];
+    }
+    // html最开始肯定是一个 <  <div>hello</div>
+    function advance(n) {
+      html = html.substring(n);
+    }
+    function parseStartTag() {
+      var start = html.match(startTagOpen);
+      if (start) {
+        var match = {
+          tagName: start[1],
+          // 标签名
+          attrs: [] // 属性
+        };
+        advance(start[0].length); // 删掉已经匹配过的内容
+        // 如果不是开始标签的结束，就一直匹配下去
+        var attr, _end;
+        while (!(_end = html.match(startTagClose)) && (attr = html.match(attribute))) {
+          advance(attr[0].length);
+          match.attrs.push({
+            name: attr[1],
+            value: attr[3] || attr[4] || attr[5] || true
+          });
+        }
+        if (_end) {
+          advance(_end[0].length);
+        }
+        return match;
+      }
+      return false; // 不是开始标签
+    }
+    while (html) {
+      // 如果textEnd为0，说明是一个开始标签或者结束标签
+      // 如果textEnd>0，说明就是文本的结束位置
+      var textEnd = html.indexOf("<"); // 如果indexOf中的索引是0 则说明是个标签
+      // 开始标签解析
+      if (textEnd == 0) {
+        var startTagMatch = parseStartTag(); // 开始标签的匹配结果
+        if (startTagMatch) {
+          // 解析到的开始标签
+          start(startTagMatch.tagName, startTagMatch.attrs);
+          continue;
+        }
+        var endTagMatch = html.match(endTag);
+        if (endTagMatch) {
+          end(endTagMatch[1]);
+          advance(endTagMatch[0].length);
+          continue;
+        }
+      }
+      if (textEnd > 0) {
+        // 截取文本的内容
+        var text = html.substring(0, textEnd); // 文本内容
+        if (text) {
+          chars(text);
+          advance(text.length); // 解析到的文本
+        }
+      }
+    }
+    console.log(root);
+  }
   function compileToFunction(template) {
-    console.log("template", template);
     // 1.将template转化ast语法树
+    parseHTML(template);
     // 2.生成render方法(render方法执行后的返回结果就是虚拟DOM)
   }
 
