@@ -4,7 +4,7 @@
  * @Author: hzj
  * @Date: 2024-03-10 09:11:10
  * @LastEditors: hzj
- * @LastEditTime: 2024-03-16 20:45:23
+ * @LastEditTime: 2024-03-16 22:29:44
 -->
 <!DOCTYPE html>
 <html lang="en">
@@ -15,8 +15,8 @@
     <title>Document</title>
   </head>
   <body>
-    <div id="app" style="color: red; background: yellow">
-      <div style="color: red">{{       name      }} hzj {{age}}  1hzj111</div>
+    <div id="app" style="color: red;background: yellow">
+      <div style="color: green" key="123">{{ name }} hzj {{age}} 1hzj111</div>
       <span>world</span>
     </div>
     <script src="./vue.js"></script>
@@ -54,6 +54,14 @@
         },
       });
       vm.$mount("#app");
+
+      // 属性和视图关联起来，数据变化可以自动更新视图(观察者模式)
+      // 依赖收集 页面渲染
+      setTimeout(() => {
+        vm.name = "121321231";
+        vm.age = "18";
+        vm._update(vm._render()); // 重新根据数据渲染一个虚拟DOM
+      }, 1000);
       // 1.模板引擎 性能差 需要正则匹配替换  vue1.0的时候，没有引入虚拟DOM改变
       // 2.采用虚拟DOM  数据变化后比较虚拟DOM的差异，最后更新需要更新的地方
       // 3.核心就是将模板变为我们的js语法规范，通过js语法生成虚拟DOM

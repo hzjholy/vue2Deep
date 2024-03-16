@@ -1,3 +1,11 @@
+<!--
+ * @Description: 
+ * @Version: 1.0
+ * @Author: hzj
+ * @Date: 2024-03-09 23:50:31
+ * @LastEditors: hzj
+ * @LastEditTime: 2024-03-16 22:26:35
+-->
 # 深入学习vue2
 
 
@@ -14,3 +22,8 @@
 
 
 cnpm i @rollup/plugin-node-resolve
+
+vue使用注意事项
+
+el元素需要考虑是否渲染后的问题
+el元素显示隐藏之后，需要考虑相关属性设置计算

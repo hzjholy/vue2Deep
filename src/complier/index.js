@@ -9,7 +9,7 @@ function genProps(attrs) {
       let obj = {};
       attr.value.split(";").forEach((item) => {
         // qs库
-        let [key, value] = item.split(":");
+        let [key, value] = item.trim().split(":");
         obj[key] = value;
       });
       attr.value = obj;

@@ -255,10 +255,10 @@
         var obj = {};
         attr.value.split(";").forEach(function (item) {
           // qs库
-          var _item$split = item.split(":"),
-            _item$split2 = _slicedToArray(_item$split, 2),
-            key = _item$split2[0],
-            value = _item$split2[1];
+          var _item$trim$split = item.trim().split(":"),
+            _item$trim$split2 = _slicedToArray(_item$trim$split, 2),
+            key = _item$trim$split2[0],
+            value = _item$trim$split2[1];
           obj[key] = value;
         });
         attr.value = obj;
@@ -337,23 +337,121 @@
   }
 
   /*
-   * @Description: 组件挂载
+   * @Description: 虚拟DOM
    * @Version: 1.0
    * @Author: hzj
-   * @Date: 2024-03-16 21:08:25
+   * @Date: 2024-03-16 21:23:44
    * @LastEditors: hzj
-   * @LastEditTime: 2024-03-16 21:15:10
+   * @LastEditTime: 2024-03-16 21:37:24
    */
+  // h()  _c()
+  function createElementVNode(vm, tag, data) {
+    if (data == null) {
+      data = {};
+    }
+    var key = data.key;
+    if (key) {
+      delete data.key;
+    }
+    for (var _len = arguments.length, children = new Array(_len > 3 ? _len - 3 : 0), _key = 3; _key < _len; _key++) {
+      children[_key - 3] = arguments[_key];
+    }
+    return vnode(vm, tag, key, data, children);
+  }
 
+  // _v()
+  function createTextVNode(vm, text) {
+    return vnode(vm, undefined, undefined, undefined, undefined, text);
+  }
+
+  // ast一样吗？ ast做的是语法层面的转化，描述的是语法本身（可以描述js css html）
+  // 虚拟DOM描述的是 DOM元素，可以增加一些自定义的属性(描述DOM)
+  function vnode(vm, tag, key, data, children, text) {
+    return {
+      vm: vm,
+      tag: tag,
+      key: key,
+      data: data,
+      children: children,
+      text: text
+      //  ...
+    };
+  }
+
+  function createElm(vnode) {
+    var tag = vnode.tag,
+      data = vnode.data,
+      children = vnode.children,
+      text = vnode.text;
+    if (typeof tag === "string") {
+      // 标签
+      // 这里将真实节点和虚拟节点对应起来，后续如果修改属性了
+      vnode.el = document.createElement(tag);
+      patchProps(vnode.el, data);
+      children.forEach(function (child) {
+        vnode.el.appendChild(createElm(child));
+      });
+    } else {
+      vnode.el = document.createTextNode(text);
+    }
+    return vnode.el;
+  }
+  function patchProps(el, props) {
+    for (var key in props) {
+      if (key === "style") {
+        // style{color:'red'}
+        for (var styleName in props.style) {
+          el.style[styleName] = props.style[styleName];
+        }
+      } else {
+        el.setAttribute(key, props[key]);
+      }
+    }
+  }
+  function patch(oldVNode, vnode) {
+    // 写的是初渲染流程
+    var isRealElement = oldVNode.nodeType;
+    if (isRealElement) {
+      var elm = oldVNode; // 获取真实元素
+      var parentElm = elm.parentNode; // 拿到父元素
+      var newElm = createElm(vnode);
+      parentElm.insertBefore(newElm, elm.nextSibling);
+      parentElm.removeChild(elm); // 删除老节点
+      console.log("newElm", newElm);
+      return newElm;
+    }
+  }
   function initLifeCycle(Vue) {
-    Vue.prototype._update = function () {
-      console.log("update");
+    // 将vnode转为真实DOM
+    Vue.prototype._update = function (vnode) {
+      var vm = this;
+      var el = vm.$el;
+      console.log(vnode, el);
+      // patch 既有初始化功能，又有更新的逻辑
+      vm.$el = patch(el, vnode);
+    };
+    //  _c('div',{},...children)
+    Vue.prototype._c = function () {
+      return createElementVNode.apply(void 0, [this].concat(Array.prototype.slice.call(arguments)));
+    };
+    //  _v(text)
+    Vue.prototype._v = function () {
+      return createTextVNode.apply(void 0, [this].concat(Array.prototype.slice.call(arguments)));
+    };
+    Vue.prototype._s = function (value) {
+      if (_typeof(value) !== "object") return value;
+      return JSON.stringify(value);
     };
     Vue.prototype._render = function () {
       console.log("render");
+      // 当渲染的时候，会去实例中取值，我们可以将属性和视图绑定在一起
+      // 让with中的this指向vm
+      return this.$options.render.call(this); // 通过ast语法转义后执行的render方法
     };
   }
   function mountComponent(vm, el) {
+    // 这里的el是通过querySelector处理过的
+    vm.$el = el;
     // 1.调用render方法产生虚拟DOM
     vm._update(vm._render()); // vm.$options.render() 返回虚拟节点  _update将虚拟节点生成真实节点
     // 2.根据虚拟DOM产生真实DOM
@@ -569,7 +667,7 @@
           }
         }
         // ops.render; // 最终就可以获取render方法
-        mountComponent(vm); // 组件的挂载
+        mountComponent(vm, el); // 组件的挂载
       };
       // script 标签引用的vue.global.js 这个编译过程是在浏览器运行的
       // runtime【运行时】不包含模板编译的，整个编译打包的时候通过loader来转义.vue文件
