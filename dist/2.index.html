@@ -1,3 +1,11 @@
+<!--
+ * @Description: 
+ * @Version: 1.0
+ * @Author: hzj
+ * @Date: 2024-03-10 09:11:10
+ * @LastEditors: hzj
+ * @LastEditTime: 2024-03-16 20:45:23
+-->
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -7,9 +15,9 @@
     <title>Document</title>
   </head>
   <body>
-    <div id="app">
-      <div style="color: red">{{name}} hzj</div>
-      <span>{{age}}</span>
+    <div id="app" style="color: red; background: yellow">
+      <div style="color: red">{{       name      }} hzj {{age}}  1hzj111</div>
+      <span>world</span>
     </div>
     <script src="./vue.js"></script>
     <script>
@@ -46,7 +54,6 @@
         },
       });
       vm.$mount("#app");
-      console.log("vm", vm);
       // 1.模板引擎 性能差 需要正则匹配替换  vue1.0的时候，没有引入虚拟DOM改变
       // 2.采用虚拟DOM  数据变化后比较虚拟DOM的差异，最后更新需要更新的地方
       // 3.核心就是将模板变为我们的js语法规范，通过js语法生成虚拟DOM

@@ -34,7 +34,6 @@ export function initMixin(Vue) {
           }
         }
         // 写了template就用写了的template
-        console.log("template", template);
         if (template) {
           // 有了模板进行模板编译
           const render = compileToFunction(template);
