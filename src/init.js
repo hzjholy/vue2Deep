@@ -1,4 +1,5 @@
 import { compileToFunction } from "./complier";
+import { mountComponent } from "./lifecycle";
 import { initState } from "./state";
 
 export function initMixin(Vue) {
@@ -41,8 +42,8 @@ export function initMixin(Vue) {
         }
       }
       // ops.render; // 最终就可以获取render方法
+      mountComponent(vm,el); // 组件的挂载
     };
-
     // script 标签引用的vue.global.js 这个编译过程是在浏览器运行的
     // runtime【运行时】不包含模板编译的，整个编译打包的时候通过loader来转义.vue文件
     // 用runtime的时候，不能使用template

@@ -328,9 +328,47 @@
     var ast = parseHTML(template);
     // 2.生成render方法(render方法执行后的返回结果就是虚拟DOM)
     // 标签名+属性+儿子
-    var codeString = codegen(ast);
-    console.log(codeString);
+
+    // 模板引擎的实现原理  with + new Function
+    var code = codegen(ast);
+    code = "with(this){return ".concat(code, "}");
+    var redner = new Function(code); // 根据代码生成render函数
+    return redner;
   }
+
+  /*
+   * @Description: 组件挂载
+   * @Version: 1.0
+   * @Author: hzj
+   * @Date: 2024-03-16 21:08:25
+   * @LastEditors: hzj
+   * @LastEditTime: 2024-03-16 21:15:10
+   */
+
+  function initLifeCycle(Vue) {
+    Vue.prototype._update = function () {
+      console.log("update");
+    };
+    Vue.prototype._render = function () {
+      console.log("render");
+    };
+  }
+  function mountComponent(vm, el) {
+    // 1.调用render方法产生虚拟DOM
+    vm._update(vm._render()); // vm.$options.render() 返回虚拟节点  _update将虚拟节点生成真实节点
+    // 2.根据虚拟DOM产生真实DOM
+    // 3.插入el的元素中
+  }
+
+  /**
+   * vue的核心流程
+   * 1. 创造了响应式数据  once
+   * 2. 将模板转换为ast语法树 once
+   * 3. 将ast语法树转换了render函数
+   * 4. 后续每次数据更新只执行render函数（无需再次执行ast转化的过程）
+   * 5. render函数会产生虚拟节点(使用响应式数据)
+   * 6. 根据生成的虚拟节点创造真实的DOM
+   */
 
   // 重写数组的部分方法
 
@@ -531,19 +569,29 @@
           }
         }
         // ops.render; // 最终就可以获取render方法
+        mountComponent(vm); // 组件的挂载
       };
-
       // script 标签引用的vue.global.js 这个编译过程是在浏览器运行的
       // runtime【运行时】不包含模板编译的，整个编译打包的时候通过loader来转义.vue文件
       // 用runtime的时候，不能使用template
     };
   }
 
+  /*
+   * @Description: 主文件
+   * @Version: 1.0
+   * @Author: hzj
+   * @Date: 2024-03-09 22:00:57
+   * @LastEditors: hzj
+   * @LastEditTime: 2024-03-16 21:13:23
+   */
+
   // 将所有的方法都耦合在一起
   function Vue(options) {
     this._init(options); // options就是用户的选项
   }
   initMixin(Vue);
+  initLifeCycle(Vue);
 
   return Vue;
 

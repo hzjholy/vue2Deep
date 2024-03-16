@@ -80,7 +80,10 @@ export function compileToFunction(template) {
   let ast = parseHTML(template);
   // 2.生成render方法(render方法执行后的返回结果就是虚拟DOM)
   // 标签名+属性+儿子
-  const codeString = codegen(ast);
 
-  console.log(codeString);
+  // 模板引擎的实现原理  with + new Function
+  let code = codegen(ast);
+  code = `with(this){return ${code}}`;
+  let redner = new Function(code); // 根据代码生成render函数
+  return redner;
 }
